@@ -1,6 +1,5 @@
 package bingo;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -21,8 +20,7 @@ public class Cliente extends Thread{
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.out.println("Error: " + e.getMessage());
             }
         }
         // Devolvemos los números al ArrayList
@@ -57,9 +55,6 @@ public class Cliente extends Thread{
                         valor = valor.substring(0, i);
                         break;
                     }
-                }
-                if (bolas.contains(Integer.parseInt(valor))){
-                    System.out.println("La bola " + valor + " ya ha salido!!!!!!!!!!");
                 }
                 bolas.add(Integer.parseInt(valor));
                 if (this.carton.contains(Integer.parseInt(valor))){
