@@ -2,6 +2,11 @@ package bingo;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        // Generar un número aleatorio entre 1 y 99
+        int randomInt = (int) (Math.random() * 98) + 1;
+
+
+        
+        System.out.println("Número aleatorio: " + randomInt);
     }
 }
