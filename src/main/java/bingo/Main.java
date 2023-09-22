@@ -21,8 +21,13 @@ public class Main {
 
         // Crear varios hilos que operarán sobre el ArrayList compartido
         Thread cliente = new Cliente("Hilo cliente");
-        Thread servidor = new Cliente("Hilo servidor");
+        Thread servidor = new Servidor("Hilo servidor");
         cliente.start();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
         servidor.start();
 
 
