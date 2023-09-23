@@ -12,20 +12,11 @@ public class Cliente extends Thread{
 
     private synchronized void crearCarton(){
         // Cogemos 15 números aleatorios del ArrayList sin repetir
+        ArrayList<Integer> numerosDisponibles = new ArrayList<>(Main.numerosCompartidos);
         for (int i = 0; i < 15; i++) {
-            int randomInt = (int) (Math.random() * Main.numerosCompartidos.size());
-            //System.out.println("Random: " + randomInt);
-            this.carton.add(Main.numerosCompartidos.get(randomInt));
-            Main.numerosCompartidos.remove(randomInt);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                System.out.println("Error: " + e.getMessage());
-            }
-        }
-        // Devolvemos los números al ArrayList
-        for (int i: this.carton) {
-            Main.numerosCompartidos.add(i);
+            int randomInt = (int) (Math.random() * numerosDisponibles.size());
+            this.carton.add(numerosDisponibles.get(randomInt));
+            numerosDisponibles.remove(randomInt);
         }
     }
 
@@ -33,19 +24,19 @@ public class Cliente extends Thread{
     public void run(){
         this.crearCarton();
         int contador = 0;
-        MulticastSocket socket = null;
         ArrayList<Integer> bolas = new ArrayList<>();
+        MulticastSocket socket = null;
         try{
             InetAddress grupo = InetAddress.getByName("225.0.0.100"); // grupo multicast
-            socket = new MulticastSocket(6789); // socket abierto en el puerto 6789
+            socket = new MulticastSocket(6789);
             socket.joinGroup(grupo); // se une al grupo
-            while(true){
-                byte[] buf = new byte[4]; // 4 bytes para el entero
+            while(true){                
+                byte[] buf = new byte[6]; // 4 bytes para el entero
                 DatagramPacket mensaje = new DatagramPacket(buf, buf.length);
-                //System.out.println("Esperando mensaje...");
                 socket.receive(mensaje);
                 // Comprobamos si el carton contiene al numero recibido
                 String valor = new String(mensaje.getData());
+
                 // Al hacer esta conversión hay dos caracteres extranos al final de la cadena
                 // Por eso se recorre la cadena y se eliminan los caracteres nulos
                 for (int i = 0; i < valor.length(); i++) {
@@ -56,16 +47,28 @@ public class Cliente extends Thread{
                         break;
                     }
                 }
+
+                // Si el mensaje es "Fin", se termina el juego. El fin lo envia el servidor
+                if (valor.equals("Fin")){
+                    break;
+                }
+                if (valor.equals("Bingo")){
+                    continue;
+                }
+
                 bolas.add(Integer.parseInt(valor));
                 if (this.carton.contains(Integer.parseInt(valor))){
-                    System.out.println("El cartón de " + this.nombre + " contiene el número " + valor);
+                    // System.out.println("El cartón de " + this.nombre + " contiene el número " + valor);
                     contador++;
-                    if (contador == 15){
-                        System.out.println("El cartón de " + this.nombre + " ha cantado bingo");
+                    if (contador == 15){ // Si el contador llega a 15, el cliente ha ganado
+                        System.out.println("El cliente " + this.nombre + " ha ganado el bingo");
+                        String finString = "Bingo";
+                        byte[] bufFinal = finString.getBytes(); // 4 bytes para el entero  
+                        DatagramPacket mensajeFinal = new DatagramPacket(bufFinal, bufFinal.length, grupo, 6789);
+                        socket.send(mensajeFinal);
                         break;
                     }
                 }
-                System.out.println("Recibido: " + valor.toString());
             }
             socket.leaveGroup(grupo);
         }catch (SocketException e){ // Excepción de socket
@@ -80,7 +83,6 @@ public class Cliente extends Thread{
                 socket.close();
             }
         }
-        System.out.println("El cliente ha terminado");
     }
 }
 
